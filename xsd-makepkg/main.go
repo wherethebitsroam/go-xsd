@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-utils/ugo"
 
-	xsd "github.com/metaleap/go-xsd"
+	xsd "github.com/wherethebitsroam/go-xsd"
 )
 
 var (
@@ -57,32 +57,48 @@ func main() {
 		xsd.PkgGen.BasePath, xsd.PkgGen.BaseCodePath = *flagBasePath, ugo.GopathSrc(strings.Split(*flagBasePath, "/")...)
 	}
 	for _, s := range schemas {
-		log.Printf("LOAD:\t%v\n", s)
-		if sd, err = xsd.LoadSchema(s, *flagLocalCopy); err != nil {
+		err := processSchema(s)
+		if err != nil {
 			log.Printf("\tERROR: %v\n", err)
-		} else if sd != nil {
-			xsd.PkgGen.ForceParseForDefaults = *flagForceParse || (s == "schemas.opengis.net/kml/2.2.0/ogckml22.xsd") // KML schema uses 0 and 1 as defaults for booleans...
-			if outFilePath, err = sd.MakeGoPkgSrcFile(); err == nil {
-				log.Printf("MKPKG:\t%v\n", outFilePath)
-				if *flagGoFmt {
-					if raw, err = exec.Command("gofmt", "-w=true", "-s=true", "-e=true", outFilePath).CombinedOutput(); len(raw) > 0 {
-						log.Printf("GOFMT:\t%s\n", string(raw))
-					}
-					if err != nil {
-						log.Printf("GOFMT:\t%v\n", err)
-					}
-				}
-				if *flagGoInst {
-					if raw, err = exec.Command("go-buildrun", "-d=__doc.html", "-f="+outFilePath).CombinedOutput(); len(raw) > 0 {
-						println(string(raw))
-					}
-					if err != nil {
-						log.Printf("GOINST:\t%v\n", err)
-					}
-				}
-			} else {
-				log.Printf("\tERROR:\t%v\n", err)
-			}
 		}
 	}
+}
+
+func processSchema(schema string) error {
+	log.Printf("LOAD:\t%v\n", s)
+	if sd, err = xsd.LoadSchema(s, *flagLocalCopy); err != nil {
+		return err
+	}
+
+	// surely this is an error?
+	// but it was just skipped in the original version
+	if sd == nil {
+		return nil
+	}
+
+	xsd.PkgGen.ForceParseForDefaults = *flagForceParse || (s == "schemas.opengis.net/kml/2.2.0/ogckml22.xsd") // KML schema uses 0 and 1 as defaults for booleans...
+	if outFilePath, err = sd.MakeGoPkgSrcFile(); err != nil {
+		return err
+	}
+	log.Printf("MKPKG:\t%v\n", outFilePath)
+
+	if *flagGoFmt {
+		if raw, err = exec.Command("gofmt", "-w=true", "-s=true", "-e=true", outFilePath).CombinedOutput(); len(raw) > 0 {
+			log.Printf("GOFMT:\t%s\n", string(raw))
+		}
+		if err != nil {
+			log.Printf("GOFMT:\t%v\n", err)
+		}
+	}
+
+	if *flagGoInst {
+		if raw, err = exec.Command("go-buildrun", "-d=__doc.html", "-f="+outFilePath).CombinedOutput(); len(raw) > 0 {
+			println(string(raw))
+		}
+		if err != nil {
+			log.Printf("GOINST:\t%v\n", err)
+		}
+	}
+
+	return nil
 }

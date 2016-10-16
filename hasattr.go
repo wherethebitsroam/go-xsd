@@ -1,7 +1,7 @@
 package xsd
 
 import (
-	xsdt "github.com/metaleap/go-xsd/types"
+	xsdt "github.com/wherethebitsroam/go-xsd/types"
 )
 
 type hasAttrAbstract struct {
@@ -48,8 +48,8 @@ type hasAttrElementFormDefault struct {
 	ElementFormDefault string `xml:"elementFormDefault,attr"`
 }
 
-type hasAttrId struct {
-	Id xsdt.Id `xml:"id,attr"`
+type hasAttrID struct {
+	ID xsdt.Id `xml:"id,attr"`
 }
 
 type hasAttrItemType struct {
@@ -64,13 +64,13 @@ type hasAttrMaxOccurs struct {
 	MaxOccurs string `xml:"maxOccurs,attr"`
 }
 
-func (me *hasAttrMaxOccurs) Value() (l xsdt.Long) {
-	if len(me.MaxOccurs) == 0 {
+func (h *hasAttrMaxOccurs) Value() (l xsdt.Long) {
+	if len(h.MaxOccurs) == 0 {
 		l = 1
-	} else if me.MaxOccurs == "unbounded" {
+	} else if h.MaxOccurs == "unbounded" {
 		l = -1
 	} else {
-		l.Set(me.MaxOccurs)
+		l.Set(h.MaxOccurs)
 	}
 	return
 }
